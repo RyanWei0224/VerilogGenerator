@@ -1,6 +1,8 @@
 <RCC>
-    <qresource prefix="/pics">
-        <file>delete.jpg</file>
-        <file>add.jpg</file>
+    <qresource prefix="/">
+        <file>img/add.jpg</file>
+        <file>img/delete.jpg</file>
+        <file>img/down.jpg</file>
+        <file>img/up.jpg</file>
     </qresource>
 </RCC>

@@ -5,23 +5,26 @@
 #include <QTableWidget>
 #include <QToolButton>
 
-class DelButton : public QToolButton{
+class RowButton : public QToolButton{
 	Q_OBJECT
+
+public:
+	typedef uint8_t id_t;
 
 private:
 	QPersistentModelIndex idx;
-	QTableWidget* table;
+	id_t id;
 
 public:
-	DelButton(const QIcon& icon, int row,
-			  QTableWidget* _table, QWidget* parent = nullptr);
-	~DelButton() = default;
+	RowButton(const QIcon& icon, int button_id, int row,
+			  QTableWidget* table, QWidget* parent = nullptr);
+	~RowButton() = default;
 
 private slots:
 	void activate();
 
 signals:
-	void activated(int row);
+	void activated(int row, RowButton::id_t id);
 };
 
 #endif // BUTTONS_H

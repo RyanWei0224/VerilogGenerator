@@ -10,6 +10,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileDialog>
+#include <QGridLayout>
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QIcon>
@@ -20,6 +21,7 @@
 #include <QMessageBox>
 #include <QRegularExpression>
 #include <QSet>
+#include <QSize>
 #include <QString>
 #include <QStringList>
 #include <QTableWidget>
@@ -36,7 +38,7 @@ const int MainWindow::wireCol = 2;
 const int MainWindow::signCol = 3;
 const int MainWindow::tbCol   = 4;
 const int MainWindow::lenCol  = 5;
-const int MainWindow::delCol  = 6;
+const int MainWindow::buttonCol  = 6;
 
 MainWindow::MainWindow(QWidget* parent)
 	: QMainWindow(parent), ui(new Ui::MainWindow){
@@ -46,15 +48,18 @@ MainWindow::MainWindow(QWidget* parent)
 	table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 	table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
 	table->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-	delIcon = QIcon(":/pics/delete.jpg");
-	addIcon = QIcon(":/pics/add.jpg");
+	delIcon = QIcon(":/img/delete.jpg");
+	addIcon = QIcon(":/img/add.jpg");
+	upIcon = QIcon(":/img/up.jpg");
+	downIcon = QIcon(":/img/down.jpg");
 	// Add table button.
 	auto* button = new QToolButton();
 	button->setIcon(addIcon);
-	table->setCellWidget(0, delCol, button);
+	button->setIconSize(QSize(20, 20));
+	table->setCellWidget(0, buttonCol, button);
 	connect(button, &QAbstractButton::clicked, this, &MainWindow::_addRow);
 	// Connect signal-slots.
-	connect(ui->dirButton, &QAbstractButton::clicked, this, &MainWindow::select_dir);
+	connect(ui->dirButton, &QAbstractButton::clicked, this, &MainWindow::selectDir);
 	connect(ui->genButton, &QAbstractButton::clicked, this, &MainWindow::generate);
 	// Set init text.
 	curPath = QDir::currentPath();
@@ -79,7 +84,60 @@ void MainWindow::_addRow(){
 	addRow();
 }
 
-void MainWindow::select_dir(){
+void MainWindow::swapRows(int row1, int row2){
+	if(row1 == row2) return;
+
+	QString str;
+	CheckStat stat;
+	bool checked;
+
+	str = table->item(row1, nameCol)->text();
+	table->item(row1, nameCol)->setText(table->item(row2, nameCol)->text());
+	table->item(row2, nameCol)->setText(str);
+
+	str = table->item(row1, lenCol)->text();
+	table->item(row1, lenCol)->setText(table->item(row2, lenCol)->text());
+	table->item(row2, lenCol)->setText(str);
+
+	stat = buttonStat(row1, ioCol);
+	setButtonStat(row1, ioCol, buttonStat(row2, ioCol));
+	setButtonStat(row2, ioCol, stat);
+
+	stat = buttonStat(row1, wireCol);
+	setButtonStat(row1, wireCol, buttonStat(row2, wireCol));
+	setButtonStat(row2, wireCol, stat);
+
+	stat = buttonStat(row1, signCol);
+	setButtonStat(row1, signCol, buttonStat(row2, signCol));
+	setButtonStat(row2, signCol, stat);
+
+	checked = boxStat(row1, tbCol);
+	setBoxStat(row1, tbCol, boxStat(row2, tbCol));
+	setBoxStat(row2, tbCol, checked);
+}
+
+void MainWindow::buttonHandler(int row, RowButton::id_t id){
+	QMessageBox::StandardButton ans;
+	switch(id){
+	case 0:
+		ans = QMessageBox::question(this, "Deleting...", "Do you want to delete this from the table?");
+		if(ans == QMessageBox::Yes)
+			table->removeRow(row);
+		break;
+	// Move up.
+	case 1:
+		if(row == 0) break;
+		swapRows(row-1, row);
+		break;
+	// Move down.
+	case 2:
+		if(row >= table->rowCount() - 2) break;
+		swapRows(row, row+1);
+		break;
+	}
+}
+
+void MainWindow::selectDir(){
 	QString path = QDir::toNativeSeparators(
 		QFileDialog::getExistingDirectory(this, tr("Directory to save"),
 			ui->curDir->text())
@@ -91,8 +149,16 @@ MainWindow::CheckStat MainWindow::buttonStat(int row, int col){
 	return dynamic_cast<BinCheck*>(table->cellWidget(row, col))->get();
 }
 
+void MainWindow::setButtonStat(int row, int col, CheckStat stat){
+	dynamic_cast<BinCheck*>(table->cellWidget(row, col))->set(stat);
+}
+
 bool MainWindow::boxStat(int row, int col){
 	return table->cellWidget(row, col)->findChild<QCheckBox*>()->isChecked();
+}
+
+void MainWindow::setBoxStat(int row, int col, bool stat){
+	table->cellWidget(row, col)->findChild<QCheckBox*>()->setChecked(stat);
 }
 
 void MainWindow::addRow(bool useLast, const QString& name, CheckStat io, CheckStat wire, CheckStat sign, bool tbChecked, const QString& len){
@@ -138,9 +204,34 @@ void MainWindow::addRow(bool useLast, const QString& name, CheckStat io, CheckSt
 	table->setItem(row, nameCol, new QTableWidgetItem(name));
 	table->setItem(row, lenCol, new QTableWidgetItem(len));
 
-	// Add delete button.
-	DelButton* button=new DelButton(delIcon, row, table);
-	table->setCellWidget(row, delCol, button);
+	// Add control buttons.
+	RowButton* button;
+	QGridLayout* glayout;
+	widget = new QWidget(table);
+	glayout = new QGridLayout(widget);
+	glayout->setSpacing(0);
+	glayout->setContentsMargins(8,1,8,1);
+
+	button=new RowButton(delIcon, 0, row, table);
+	button->setIconSize(QSize(20, 20));
+	glayout->addWidget(button, 0, 0, 2, 1);
+	glayout->setAlignment(button, Qt::AlignCenter);
+	connect(button, &RowButton::activated, this, &MainWindow::buttonHandler);
+
+	button=new RowButton(upIcon, 1, row, table);
+	button->setIconSize(QSize(16, 8));
+	glayout->addWidget(button, 0, 1);
+	glayout->setAlignment(button, Qt::AlignCenter);
+	connect(button, &RowButton::activated, this, &MainWindow::buttonHandler);
+
+	button=new RowButton(downIcon, 2, row, table);
+	button->setIconSize(QSize(16, 8));
+	glayout->addWidget(button, 1, 1);
+	glayout->setAlignment(button, Qt::AlignCenter);
+	connect(button, &RowButton::activated, this, &MainWindow::buttonHandler);
+
+	widget->setLayout(glayout);
+	table->setCellWidget(row, buttonCol, widget);
 
 	//table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 }

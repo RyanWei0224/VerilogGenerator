@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>VerilogGenerator v1.0</string>
+   <string>VerilogGenerator v1.1</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QTableWidget" name="tableWidget">
@@ -60,7 +60,7 @@
     </column>
     <column>
      <property name="text">
-      <string>delete</string>
+      <string>modify</string>
      </property>
     </column>
     <item row="0" column="0">
@@ -388,7 +388,7 @@
      <item row="2" column="1">
       <widget class="QLineEdit" name="version">
        <property name="text">
-        <string>1.0</string>
+        <string>1.1</string>
        </property>
       </widget>
      </item>

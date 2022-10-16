@@ -12,6 +12,7 @@
 #include <tuple>
 
 #include "bincheck.h"
+#include "buttons.h"
 
 namespace Ui {
 	class MainWindow;
@@ -26,14 +27,17 @@ public:
 
 private slots:
 	void _addRow();
-	void select_dir();
+	void buttonHandler(int row, RowButton::id_t id);
+	void selectDir();
 	bool generate();
 
 private:
 	typedef BinCheck::Stat CheckStat;
 
 	CheckStat buttonStat(int row, int col);
+	void setButtonStat(int row, int col, CheckStat stat);
 	bool boxStat(int row, int col);
+	void setBoxStat(int row, int col, bool stat);
 	void addRow(bool useLast=true,
 				const QString& name="",
 				CheckStat io=CheckStat::CHECK_0,
@@ -41,6 +45,7 @@ private:
 				CheckStat sign=CheckStat::CHECK_0,
 				bool tbChecked=false,
 				const QString& len="");
+	void swapRows(int row1, int row2);
 
 	bool openFile(const QString& fileName, QFile& f, QTextStream& s);
 	void closeFile(QFile& f, QTextStream& s);
@@ -53,7 +58,7 @@ private:
 	void printPins(QTextStream& s, bool& p, const QString& name, const QString& pad);
 
 	Ui::MainWindow* ui;
-	QIcon delIcon, addIcon;
+	QIcon delIcon, addIcon, upIcon, downIcon;
 	QTableWidget* table;
 
 	QString curPath;
@@ -83,7 +88,7 @@ private:
 	static const int signCol;
 	static const int tbCol;
 	static const int lenCol;
-	static const int delCol;
+	static const int buttonCol;
 };
 
 #endif // MAINWINDOW_H
