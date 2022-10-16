@@ -1,29 +1,27 @@
 #ifndef BUTTONS_H
 #define BUTTONS_H
 
-#include <QWidget>
-#include <QToolButton>
+#include <QPersistentModelIndex>
 #include <QTableWidget>
-#include <QTableWidgetItem>
+#include <QToolButton>
 
-class DelButton : public QToolButton
-{
+class DelButton : public QToolButton{
 	Q_OBJECT
+
 private:
-	QTableWidgetItem *_item;
-	QTableWidget *_table;
+	QPersistentModelIndex idx;
+	QTableWidget* table;
 
 public:
-	DelButton(QIcon &icon, QTableWidgetItem *item,
-			  QTableWidget *table, QWidget *parent=nullptr);
-	~DelButton();
+	DelButton(const QIcon& icon, int row,
+			  QTableWidget* _table, QWidget* parent = nullptr);
+	~DelButton() = default;
 
 private slots:
-	void _activate();
+	void activate();
 
 signals:
-	void activate(int row);
-
+	void activated(int row);
 };
 
 #endif // BUTTONS_H

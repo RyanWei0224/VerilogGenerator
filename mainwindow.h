@@ -1,67 +1,89 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
-#include <QTableWidget>
+#include <QDataStream>
 #include <QFile>
-#include <QTextStream>
+#include <QIcon>
+#include <QMainWindow>
 #include <QString>
-#include <QPair>
+#include <QTableWidget>
+#include <QTextStream>
+
+#include <tuple>
+
+#include "bincheck.h"
 
 namespace Ui {
-class MainWindow;
+	class MainWindow;
 }
 
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow{
 	Q_OBJECT
 
 public:
-	explicit MainWindow(QWidget *parent = nullptr);
-	int buttonStat(int row, int col);
-	QTableWidget* table();
+	explicit MainWindow(QWidget* parent = nullptr);
 	~MainWindow();
-
-public slots:
-	//void removeRow(int row);
 
 private slots:
 	void _addRow();
-
-	void on_toolButton_clicked();
-
-	void on_pushButton_clicked();
+	void select_dir();
+	bool generate();
 
 private:
-	Ui::MainWindow *ui;
-	QIcon delIcon,addIcon;
+	typedef BinCheck::Stat CheckStat;
 
-	QFile f;
-	QTextStream s;
-	QString curPath;
-	static const QString header;
-	static const QString params;
-	static const QString content;
-	static const QString paramsNoClk;
-	static const QString contentNoClk;
-
-	typedef  QPair<QString,int> pair1;
-	typedef  QPair<int,QString> pair2;
-	typedef  QPair<pair1,pair2> myPair;
-
-	bool openFile(const QString &fileName);
-	void closeFile();
+	CheckStat buttonStat(int row, int col);
+	bool boxStat(int row, int col);
 	void addRow(bool useLast=true,
 				const QString& name="",
-				int io=0,
-				int wire=0,
-				int sign=0,
-				const QString& lenm1="");
-	void printIO(bool& p, const QString &name, const QString &pad);
+				CheckStat io=CheckStat::CHECK_0,
+				CheckStat wire=CheckStat::CHECK_0,
+				CheckStat sign=CheckStat::CHECK_0,
+				bool tbChecked=false,
+				const QString& len="");
+
+	bool openFile(const QString& fileName, QFile& f, QTextStream& s);
+	void closeFile(QFile& f, QTextStream& s);
 
 	bool readLog();
 	void saveLog();
 
+	int readTemplate();
+
+	void printPins(QTextStream& s, bool& p, const QString& name, const QString& pad);
+
+	Ui::MainWindow* ui;
+	QIcon delIcon, addIcon;
+	QTableWidget* table;
+
+	QString curPath;
+
+	struct rowEntry{
+		QString name;
+		CheckStat io, wire, sign;
+		bool tbChecked;
+		QString len;
+	};
+
+	friend QDataStream& operator>>(QDataStream& in, rowEntry& entry);
+	friend QDataStream& operator<<(QDataStream& out, const rowEntry& entry);
+
+	static QString clkName;
+	static QString moduleContent;
+	static QString header;
+	static QString params;
+	static QString checkNeq;
+	static QString content;
+	static QString paramsNoClk;
+	static QString contentNoClk;
+
+	static const int nameCol;
+	static const int ioCol;
+	static const int wireCol;
+	static const int signCol;
+	static const int tbCol;
+	static const int lenCol;
+	static const int delCol;
 };
 
 #endif // MAINWINDOW_H

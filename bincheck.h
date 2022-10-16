@@ -1,37 +1,43 @@
 #ifndef BINCHECK_H
 #define BINCHECK_H
 
-#include <QWidget>
-#include <QRadioButton>
 #include <QGroupBox>
-#include <QHBoxLayout>
+#include <QRadioButton>
+#include <QString>
 
-class BinCheck : public QGroupBox
-{
+class BinCheck : public QGroupBox{
 	Q_OBJECT
-private:
-	QRadioButton* box0;
-	QRadioButton* box1;
-	QHBoxLayout* layout;
-	bool _selNull;
 
 public:
-	explicit BinCheck(const QString &no,
-					  const QString &yes,
+	enum Stat{
+		NO_CHECK,
+		CHECK_0,
+		CHECK_1,
+	};
+
+public:
+	explicit BinCheck(const QString& no,
+					  const QString& yes,
 					  bool canSelectNull = false,
-					  QWidget *parent = nullptr);
+					  QWidget* parent = nullptr);
 	void set(bool yes);
 	void reset();
-	int get();
-	~BinCheck();
+	void set(Stat stat);
+	Stat get();
+	~BinCheck() = default;
 
 signals:
-
-public slots:
+	void isSet(bool checked);
 
 private slots:
 	void setBox0(bool checked);
 	void setBox1(bool checked);
+
+private:
+	QRadioButton* box0;
+	QRadioButton* box1;
+	bool selNull;
+	bool pauseSig;
 };
 
 #endif // BINCHECK_H

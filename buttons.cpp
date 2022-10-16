@@ -1,31 +1,25 @@
 #include "buttons.h"
+
 #include <QMessageBox>
 
-DelButton::DelButton(QIcon& icon, QTableWidgetItem *item, QTableWidget *table, QWidget* parent)
-	: QToolButton (parent){
+DelButton::DelButton(const QIcon& icon, int row, QTableWidget* _table, QWidget* parent)
+	: QToolButton(parent), idx(_table->model()->index(row, 0)), table(_table){
 	setIcon(icon);
-	_item=item;
-	_table=table;
-	connect(this,&QAbstractButton::clicked,this,&DelButton::_activate);
-	connect(this,&DelButton::activate,_table,&QTableWidget::removeRow);
-	//connect(this,SIGNAL(activate(QTableWidgetItem *)),window,SIGNAL(removeRow(QTableWidgetItem *)));
+	connect(this, &QAbstractButton::clicked, this, &DelButton::activate);
+	connect(this, &DelButton::activated, _table, &QTableWidget::removeRow);
 }
 
-DelButton::~DelButton(){
-
-}
-
-void DelButton::_activate(){
-	int row=_table->row(_item);
-	if(row>=0){
-		switch(QMessageBox::question(this,"Deleting...","Do you want to delete this from the table?")){
+void DelButton::activate(){
+	int row = idx.row();
+	if(row >= 0){
+		auto ans = QMessageBox::question(this, "Deleting...", "Do you want to delete this from the table?");
+		switch(ans){
 			case QMessageBox::Yes:
-				emit activate(row);
+				emit activated(row);
 			break;
 			default:;
 		}
 	}else{
-		fprintf(stderr,"Error, can't find row of button!\n");
-		fflush(stderr);
+		QMessageBox::critical(this, "Error", "Error, can't find row of button!");
 	}
 }
